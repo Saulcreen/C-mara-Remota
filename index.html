@@ -628,6 +628,8 @@ async function startCamera(viewerPeerId) {
       log('Llamada entrante, respondiendo...','ok');
       inCall.answer(localStream);
       handleCall(inCall);
+      // Forzar bitrate también desde este lado
+      setTimeout(() => forceBitrate(inCall.peerConnection), 1500);
     });
 
   } catch(e) {
@@ -641,7 +643,7 @@ function callViewer(viewerPeerId) {
   if (!peer||peer.destroyed||!localStream) return;
   clearTimeout(callRetryTimer);
 
-  log(`Llamando a espectador...`);
+  log('Llamando al espectador...');
   const outCall = peer.call(viewerPeerId, localStream);
   if (!outCall) {
     callRetryTimer = setTimeout(() => callViewer(viewerPeerId), 5000);
@@ -650,7 +652,6 @@ function callViewer(viewerPeerId) {
 
   handleCall(outCall);
 
-  // Si no responde en 12s, reintentar
   const noAns = setTimeout(() => {
     log('Sin respuesta, reintentando...','warn');
     callViewer(viewerPeerId);
@@ -659,6 +660,45 @@ function callViewer(viewerPeerId) {
   outCall.on('stream', () => clearTimeout(noAns));
   outCall.on('error',  () => { clearTimeout(noAns); callRetryTimer = setTimeout(()=>callViewer(viewerPeerId),4000); });
   outCall.on('close',  () => { clearTimeout(noAns); callRetryTimer = setTimeout(()=>callViewer(viewerPeerId),3000); });
+}
+
+// Fuerza bitrate máximo en todos los senders de video del RTCPeerConnection
+// Usa setParameters (estándar W3C) + parche SDP como fallback
+async function forceBitrate(pc) {
+  if (!pc) return;
+
+  // — Método 1: RTCRtpSender.setParameters (Chrome, Firefox, Safari modernos)
+  for (const sender of pc.getSenders()) {
+    if (!sender.track || sender.track.kind !== 'video') continue;
+    try {
+      const params = sender.getParameters();
+      if (!params.encodings || params.encodings.length === 0) {
+        params.encodings = [{}];
+      }
+      params.encodings.forEach(enc => {
+        enc.maxBitrate       = 8_000_000;  // 8 Mbps techo
+        enc.minBitrate       = 1_000_000;  // 1 Mbps mínimo — evita pixelado
+        enc.networkPriority  = 'high';
+        enc.priority         = 'high';
+        // NO tocar scaleResolutionDownBy — dejaría 1 (sin escalar)
+      });
+      await sender.setParameters(params);
+      log('Bitrate forzado: 1–8 Mbps ✓', 'ok');
+    } catch(e) {
+      log(`setParameters falló (${e.message}), usando SDP patch`, 'warn');
+    }
+  }
+
+  // — Método 2: parche directo al SDP (fallback para navegadores viejos)
+  //   Modifica la sesión activa renegociando con bitrate aumentado
+  try {
+    const offer = await pc.createOffer();
+    // Insertar b=AS (kbps) y b=TIAS (bps) en la sección de video del SDP
+    const sdpPatched = offer.sdp
+      .replace(/(m=video[\s\S]*?)(a=)/,
+        '$1b=AS:8000\r\nb=TIAS:8000000\r\n$2');
+    await pc.setLocalDescription({ type: offer.type, sdp: sdpPatched });
+  } catch(_) { /* silencioso — el método 1 ya lo cubre */ }
 }
 
 // ─── VIEWER ───────────────────────────────────────────────────────────────────
@@ -680,19 +720,17 @@ function handleCall(c) {
     setStatus('conectado','connected');
     streamActive = true;
 
+    // Forzar bitrate alto en cuanto el peer connection esté listo
+    if (c.peerConnection) {
+      // Pequeño delay para que ICE termine de negociar
+      setTimeout(() => forceBitrate(c.peerConnection), 1500);
+    }
+
     const vid = document.getElementById('remoteVideo');
-    // Asignar stream limpio
     vid.srcObject = null;
     vid.srcObject = remoteStream;
-
-    // Forzar decodificación a máxima calidad cuando sea posible
-    if (vid.getVideoPlaybackQuality) {
-      // La API sólo es lectura, pero asegurar que no esté en modo de ahorro
-    }
-    // Desactivar modo de bajo consumo que recorta calidad
     vid.setAttribute('playsinline', '');
     vid.setAttribute('webkit-playsinline', '');
-
     vid.play().catch(()=>{});
 
     document.getElementById('remotePlaceholder').style.display = 'none';
