@@ -27,19 +27,19 @@
     background: var(--bg);
     color: var(--text);
     font-family: 'Syne', sans-serif;
-    overflow: hidden;
+    overflow-x: hidden;
   }
 
   body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     min-height: 100vh;
     position: relative;
+    padding-bottom: 40px;
   }
 
-  /* Background grid */
   body::before {
     content: '';
     position: fixed;
@@ -52,7 +52,6 @@
     z-index: 0;
   }
 
-  /* Glow orbs */
   body::after {
     content: '';
     position: fixed;
@@ -78,18 +77,15 @@
     position: relative;
     z-index: 1;
     width: 100%;
-    max-width: 960px;
+    max-width: 980px;
     padding: 24px 20px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 24px;
+    gap: 20px;
   }
 
-  /* Header */
-  header {
-    text-align: center;
-  }
+  header { text-align: center; }
 
   .logo {
     font-family: 'Space Mono', monospace;
@@ -118,7 +114,7 @@
     margin-top: 4px;
   }
 
-  /* Role selector */
+  /* ── SETUP CARD ── */
   .role-card {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -130,7 +126,6 @@
     flex-direction: column;
     gap: 20px;
     box-shadow: 0 0 40px rgba(0,245,160,0.04);
-    transition: all 0.3s;
   }
 
   .role-title {
@@ -141,11 +136,7 @@
     font-family: 'Space Mono', monospace;
   }
 
-  .role-buttons {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-  }
+  .role-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
   .role-btn {
     border: 1px solid var(--border);
@@ -178,34 +169,15 @@
   .role-btn:hover::before { opacity: 0.08; }
   .role-btn.active { border-color: var(--accent); box-shadow: 0 0 20px rgba(0,245,160,0.15); }
   .role-btn.active::before { opacity: 0.1; }
-
-  .role-btn .icon {
-    font-size: 28px;
-    position: relative;
-    z-index: 1;
-  }
-
-  .role-btn span {
-    position: relative;
-    z-index: 1;
-    font-size: 13px;
-  }
-
+  .role-btn .icon { font-size: 28px; position: relative; z-index: 1; }
+  .role-btn span { position: relative; z-index: 1; font-size: 13px; }
   .role-btn .desc {
-    font-size: 10px;
-    color: var(--muted);
+    font-size: 10px; color: var(--muted);
     font-family: 'Space Mono', monospace;
-    font-weight: 400;
-    position: relative;
-    z-index: 1;
+    font-weight: 400; position: relative; z-index: 1;
   }
 
-  /* Room ID input */
-  .room-row {
-    display: flex;
-    gap: 10px;
-    align-items: stretch;
-  }
+  .room-row { display: flex; gap: 10px; align-items: stretch; }
 
   .room-input {
     flex: 1;
@@ -251,7 +223,6 @@
     color: var(--muted);
     font-size: 12px;
   }
-
   .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
 
   .btn-danger {
@@ -259,10 +230,9 @@
     border: 1px solid rgba(245,64,96,0.4);
     color: var(--red);
   }
-
   .btn-danger:hover { background: rgba(245,64,96,0.25); }
 
-  /* Status badge */
+  /* ── STATUS ── */
   .status-badge {
     display: inline-flex;
     align-items: center;
@@ -275,18 +245,12 @@
     text-transform: uppercase;
     border: 1px solid;
   }
-
   .status-badge.idle { border-color: var(--border); color: var(--muted); }
   .status-badge.waiting { border-color: var(--warn); color: var(--warn); }
   .status-badge.connected { border-color: var(--accent); color: var(--accent); }
   .status-badge.error { border-color: var(--red); color: var(--red); }
 
-  .dot {
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: currentColor;
-  }
-
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
   .dot.pulse { animation: pulse 1.5s ease-in-out infinite; }
 
   @keyframes pulse {
@@ -294,48 +258,58 @@
     50% { opacity: 0.4; transform: scale(0.8); }
   }
 
-  /* Video area */
-  .video-area {
-    display: none;
-    width: 100%;
-    flex-direction: column;
-    gap: 16px;
-  }
-
+  /* ── VIDEO AREA ── */
+  .video-area { display: none; width: 100%; flex-direction: column; gap: 14px; }
   .video-area.visible { display: flex; }
 
-  .video-grid {
-    display: grid;
-    gap: 16px;
-    width: 100%;
-  }
-
-  .video-grid.single { grid-template-columns: 1fr; max-width: 700px; margin: 0 auto; }
+  .video-grid { display: grid; gap: 14px; width: 100%; }
+  .video-grid.single { grid-template-columns: 1fr; }
   .video-grid.dual { grid-template-columns: 1fr 1fr; }
 
-  @media (max-width: 600px) {
-    .video-grid.dual { grid-template-columns: 1fr; }
-  }
+  @media (max-width: 600px) { .video-grid.dual { grid-template-columns: 1fr; } }
 
+  /* ── VIDEO WRAPPER — clave para nitidez ── */
   .video-wrap {
     position: relative;
-    background: var(--surface);
+    background: #000;           /* negro puro, sin surface */
     border: 1px solid var(--border);
     border-radius: var(--radius);
     overflow: hidden;
     aspect-ratio: 16/9;
+    /* Sin transform que degrade calidad */
   }
 
+  /* El video ocupa exactamente el wrapper, sin interpolación extra */
   .video-wrap video {
+    position: absolute;
+    inset: 0;
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;        /* CONTAIN = no recorte, sin distorsión */
     display: block;
+    background: #000;
+    /* Forzar renderizado de alta calidad */
+    image-rendering: auto;
+    will-change: auto;          /* NO usar will-change en video, degrada */
   }
+
+  /* Modo rotado: el contenedor se adapta, el video rota dentro */
+  .video-wrap.rotated-90,
+  .video-wrap.rotated-270 {
+    aspect-ratio: 9/16;         /* inverso cuando está rotado */
+  }
+
+  .video-wrap video.rotated-90  { transform: rotate(90deg);  transform-origin: center center; }
+  .video-wrap video.rotated-180 { transform: rotate(180deg); transform-origin: center center; }
+  .video-wrap video.rotated-270 { transform: rotate(270deg); transform-origin: center center; }
+
+  /* Zoom: escala el video dentro del wrapper con clip */
+  .video-wrap.zoom-active { overflow: hidden; cursor: grab; }
+  .video-wrap.zoom-active:active { cursor: grabbing; }
 
   .video-label {
     position: absolute;
-    top: 12px; left: 12px;
+    top: 10px; left: 10px;
     background: rgba(10,10,15,0.75);
     backdrop-filter: blur(6px);
     border: 1px solid var(--border);
@@ -346,6 +320,8 @@
     letter-spacing: 2px;
     text-transform: uppercase;
     color: var(--muted);
+    z-index: 5;
+    pointer-events: none;
   }
 
   .video-placeholder {
@@ -357,12 +333,102 @@
     justify-content: center;
     gap: 10px;
     color: var(--muted);
+    z-index: 2;
+    background: #000;
   }
 
   .video-placeholder .big-icon { font-size: 40px; opacity: 0.3; }
   .video-placeholder p { font-size: 11px; font-family: 'Space Mono', monospace; letter-spacing: 1px; }
 
-  /* Controls bar */
+  /* Freeze overlay */
+  .freeze-overlay {
+    display: none;
+    position: absolute;
+    inset: 0;
+    background: rgba(245,64,96,0.15);
+    border: 2px solid var(--red);
+    border-radius: var(--radius);
+    align-items: center;
+    justify-content: center;
+    z-index: 8;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .freeze-overlay.show { display: flex; }
+  .freeze-overlay span { font-size: 11px; font-family: 'Space Mono', monospace; color: var(--red); letter-spacing: 1px; }
+
+  /* Scan line */
+  .scan-line {
+    position: absolute;
+    left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    opacity: 0.4;
+    animation: scan 3s linear infinite;
+    pointer-events: none;
+    z-index: 3;
+  }
+
+  @keyframes scan {
+    0% { top: 0%; }
+    100% { top: 100%; }
+  }
+
+  /* ── VIEWER CONTROLS (rotate + zoom) ── */
+  .viewer-controls {
+    display: none;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    gap: 16px;
+    align-items: center;
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  .viewer-controls.show { display: flex; }
+
+  .ctrl-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .ctrl-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    min-width: 48px;
+  }
+
+  .ctrl-btn {
+    width: 34px; height: 34px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    background: var(--bg);
+    color: var(--text);
+    cursor: pointer;
+    font-size: 14px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+
+  .ctrl-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(0,245,160,0.05); }
+  .ctrl-btn.active { border-color: var(--accent); background: rgba(0,245,160,0.12); color: var(--accent); }
+
+  .zoom-display {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    min-width: 38px;
+    text-align: center;
+  }
+
+  /* ── CONTROLS BAR ── */
   .controls {
     display: flex;
     gap: 10px;
@@ -370,15 +436,15 @@
     flex-wrap: wrap;
   }
 
-  /* Log */
+  /* ── LOG ── */
   .log-area {
     width: 100%;
     max-width: 560px;
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    padding: 14px 18px;
-    max-height: 100px;
+    padding: 12px 16px;
+    max-height: 90px;
     overflow-y: auto;
   }
 
@@ -399,61 +465,42 @@
   /* Fullscreen btn */
   .fs-btn {
     position: absolute;
-    bottom: 10px; right: 10px;
+    bottom: 8px; right: 8px;
     background: rgba(10,10,15,0.7);
     backdrop-filter: blur(6px);
     border: 1px solid var(--border);
     border-radius: 6px;
     color: var(--muted);
     cursor: pointer;
-    padding: 6px 8px;
+    padding: 5px 7px;
     font-size: 14px;
     transition: color 0.2s;
-    z-index: 5;
+    z-index: 6;
+    line-height: 1;
   }
 
   .fs-btn:hover { color: var(--accent); border-color: var(--accent); }
 
-  /* Scanning animation overlay */
-  .scan-line {
-    position: absolute;
-    left: 0; right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, var(--accent), transparent);
-    opacity: 0.5;
-    animation: scan 3s linear infinite;
-    pointer-events: none;
-    z-index: 3;
-  }
-
-  @keyframes scan {
-    0% { top: 0%; }
-    100% { top: 100%; }
-  }
-
-  /* Responsive */
   @media (max-width: 480px) {
     .role-buttons { grid-template-columns: 1fr; }
     .role-card { padding: 20px; }
   }
 
-  /* Transitions */
   .fade-in { animation: fadeIn 0.4s ease; }
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; } }
 </style>
 </head>
 <body>
 <div class="glow2"></div>
 
 <div class="app">
-  <!-- Header -->
   <header>
     <p class="logo">◈ CamLink</p>
     <h1>Cámara Remota</h1>
     <p class="subtitle">// WebRTC peer-to-peer · sin servidores intermedios</p>
   </header>
 
-  <!-- Setup Card -->
+  <!-- Setup -->
   <div class="role-card fade-in" id="setupCard">
     <p class="role-title">// 01 — Elige tu rol</p>
     <div class="role-buttons">
@@ -487,9 +534,10 @@
 
   <!-- Video Area -->
   <div class="video-area" id="videoArea">
+
     <div class="video-grid single" id="videoGrid">
 
-      <!-- Remote video (viewer sees this) -->
+      <!-- Remote video -->
       <div class="video-wrap" id="remoteWrap">
         <video id="remoteVideo" autoplay playsinline></video>
         <div class="video-label" id="remoteLabel">cámara remota</div>
@@ -497,19 +545,41 @@
           <span class="big-icon">📡</span>
           <p>esperando stream...</p>
         </div>
+        <div class="freeze-overlay" id="freezeOverlay">
+          <span style="font-size:22px">⚠️</span>
+          <span>stream congelado — reconectando...</span>
+        </div>
         <div class="scan-line" id="scanLine" style="display:none"></div>
         <button class="fs-btn" onclick="toggleFS('remoteVideo')" title="Pantalla completa">⛶</button>
       </div>
 
-      <!-- Local video (camera sees itself) -->
+      <!-- Local video (camera side) -->
       <div class="video-wrap" id="localWrap" style="display:none">
         <video id="localVideo" autoplay playsinline muted></video>
-        <div class="video-label">mi cámara</div>
+        <div class="video-label">mi cámara (preview)</div>
         <button class="fs-btn" onclick="toggleFS('localVideo')" title="Pantalla completa">⛶</button>
       </div>
 
     </div>
 
+    <!-- Viewer controls: rotate + zoom -->
+    <div class="viewer-controls" id="viewerControls">
+      <div class="ctrl-group">
+        <span class="ctrl-label">Rotar</span>
+        <button class="ctrl-btn" onclick="rotateLeft()" title="Rotar -90°">↺</button>
+        <button class="ctrl-btn" id="btnFlip" onclick="flipVideo()" title="Voltear horizontal">⇆</button>
+        <button class="ctrl-btn" onclick="rotateRight()" title="Rotar +90°">↻</button>
+        <button class="ctrl-btn" onclick="resetTransform()" title="Restablecer">✕</button>
+      </div>
+      <div class="ctrl-group">
+        <span class="ctrl-label">Zoom</span>
+        <button class="ctrl-btn" onclick="changeZoom(-0.25)">−</button>
+        <span class="zoom-display" id="zoomDisplay">1×</span>
+        <button class="ctrl-btn" onclick="changeZoom(+0.25)">＋</button>
+      </div>
+    </div>
+
+    <!-- Action controls -->
     <div class="controls">
       <button class="btn btn-ghost" id="muteBtn" onclick="toggleMic()" style="display:none">🎤 Mic activo</button>
       <button class="btn btn-ghost" id="camSwitchBtn" onclick="switchCamera()" style="display:none">🔄 Cambiar cámara</button>
@@ -517,28 +587,38 @@
     </div>
   </div>
 
-  <!-- Log -->
   <div class="log-area" id="logArea"></div>
-
 </div>
 
 <script>
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
-// Using PeerJS (free hosted signaling) for easy peer-to-peer
-// The peer ID will encode the room + role so both devices find each other
-
 const PEERJS_CDN = 'https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js';
 
 // ─── STATE ────────────────────────────────────────────────────────────────────
-let role = null;       // 'viewer' | 'camera'
+let role = null;
 let peer = null;
-let conn = null;       // data connection (for signaling messages)
-let call = null;       // media call
+let call = null;
 let localStream = null;
 let facingMode = 'environment';
 let micActive = true;
 
-// ─── UTILS ────────────────────────────────────────────────────────────────────
+// Transform state (viewer only)
+let rotation = 0;    // 0, 90, 180, 270
+let zoomLevel = 1.0;
+let flipped = false;
+let panX = 0, panY = 0;
+let isDragging = false, dragStartX, dragStartY, panStartX, panStartY;
+
+// Freeze detection
+let freezeTimer = null;
+let lastVideoTime = -1;
+let freezeCheckInterval = null;
+
+// Retry state
+let retryTimer = null;
+let callRetryTimer = null;
+
+// ─── UTILS ───────────────────────────────────────────────────────────────────
 function log(msg, type = '') {
   const area = document.getElementById('logArea');
   const now = new Date();
@@ -548,8 +628,7 @@ function log(msg, type = '') {
   line.innerHTML = `<span class="ts">${ts}</span><span class="msg">${msg}</span>`;
   area.appendChild(line);
   area.scrollTop = area.scrollHeight;
-  // keep last 30 lines
-  while (area.children.length > 30) area.removeChild(area.firstChild);
+  while (area.children.length > 40) area.removeChild(area.firstChild);
 }
 
 function setStatus(text, type = 'idle') {
@@ -558,7 +637,7 @@ function setStatus(text, type = 'idle') {
   badge.className = `status-badge ${type}`;
   span.textContent = text;
   const dot = badge.querySelector('.dot');
-  dot.className = `dot ${type === 'waiting' || type === 'connected' ? 'pulse' : ''}`;
+  dot.className = `dot ${(type === 'waiting' || type === 'connected') ? 'pulse' : ''}`;
 }
 
 function genRoom() {
@@ -587,7 +666,7 @@ function checkReady() {
 
 document.getElementById('roomInput').addEventListener('input', checkReady);
 
-// ─── LOAD PEERJS ──────────────────────────────────────────────────────────────
+// ─── PEERJS LOADER ────────────────────────────────────────────────────────────
 function loadPeerJS(cb) {
   if (window.Peer) { cb(); return; }
   const s = document.createElement('script');
@@ -607,8 +686,7 @@ function startConnection() {
   log('Iniciando conexión WebRTC...');
 
   loadPeerJS(() => {
-    // Peer IDs: viewer uses room+"-V", camera uses room+"-C"
-    const myId = `camlink-${room}-${role === 'viewer' ? 'V' : 'C'}`;
+    const myId    = `camlink-${room}-${role === 'viewer' ? 'V' : 'C'}`;
     const otherId = `camlink-${room}-${role === 'viewer' ? 'C' : 'V'}`;
 
     peer = new Peer(myId, {
@@ -616,164 +694,379 @@ function startConnection() {
       config: {
         iceServers: [
           { urls: 'stun:stun.l.google.com:19302' },
-          { urls: 'stun:stun1.l.google.com:19302' }
+          { urls: 'stun:stun1.l.google.com:19302' },
+          { urls: 'stun:stun2.l.google.com:19302' }
         ]
       }
     });
 
-    peer.on('open', (id) => {
-      log(`Peer creado: ${id}`, 'ok');
+    peer.on('open', () => {
+      log(`Conectado al servidor de señalización`, 'ok');
       showVideoArea();
 
       if (role === 'camera') {
         startCamera(otherId);
       } else {
         setStatus('esperando cámara...', 'waiting');
-        log('Esperando que la cámara se conecte...');
+        log('Esperando conexión de la cámara...');
         listenForCameraCall();
       }
     });
 
     peer.on('error', (err) => {
       if (err.type === 'unavailable-id') {
-        log('ID ya en uso, reintentando...', 'warn');
-        // Try with random suffix
-        const fallId = myId + '-' + Math.floor(Math.random()*1000);
+        log('ID ocupado, usando ID alternativo...', 'warn');
         peer.destroy();
-        peer = new Peer(fallId);
+        const altId = myId + '-' + Math.floor(Math.random() * 9000 + 1000);
+        peer = new Peer(altId, { debug: 0 });
         peer.on('open', () => {
           if (role === 'camera') startCamera(otherId);
-          else { setStatus('esperando cámara...', 'waiting'); listenForCameraCall(); }
+          else listenForCameraCall();
         });
+      } else if (err.type === 'peer-unavailable') {
+        // The other side isn't online yet — retry silently
+        log('Otro dispositivo no disponible, reintentando...', 'warn');
+        clearTimeout(callRetryTimer);
+        callRetryTimer = setTimeout(() => {
+          if (role === 'camera' && localStream) callViewer(otherId);
+        }, 4000);
       } else {
-        log(`Error: ${err.type}`, 'err');
-        setStatus('error', 'error');
+        log(`Error peer: ${err.type}`, 'err');
       }
     });
 
     peer.on('disconnected', () => {
-      log('Desconectado del servidor de señalización', 'warn');
+      log('Desconectado del servidor, reconectando...', 'warn');
       setStatus('reconectando...', 'waiting');
-      peer.reconnect();
+      setTimeout(() => { if (peer && !peer.destroyed) peer.reconnect(); }, 2000);
     });
   });
 }
 
-// ─── CAMERA ROLE ──────────────────────────────────────────────────────────────
+// ─── CAMERA ROLE ─────────────────────────────────────────────────────────────
 async function startCamera(viewerPeerId) {
   setStatus('iniciando cámara...', 'waiting');
   log('Accediendo a la cámara...');
 
   try {
+    // Request highest available resolution — browser will negotiate down
     localStream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode, width: { ideal: 1280 }, height: { ideal: 720 } },
-      audio: true
+      video: {
+        facingMode,
+        width:  { ideal: 3840, min: 640 },
+        height: { ideal: 2160, min: 480 },
+        frameRate: { ideal: 30, min: 15 }
+      },
+      audio: { echoCancellation: true, noiseSuppression: true }
     });
 
-    document.getElementById('localVideo').srcObject = localStream;
+    const vt = localStream.getVideoTracks()[0];
+    const settings = vt.getSettings();
+    log(`Cámara: ${settings.width}×${settings.height} @ ${Math.round(settings.frameRate||30)}fps`, 'ok');
+
+    const localVid = document.getElementById('localVideo');
+    localVid.srcObject = localStream;
+
     document.getElementById('localWrap').style.display = 'block';
     document.getElementById('muteBtn').style.display = 'inline-flex';
     document.getElementById('camSwitchBtn').style.display = 'inline-flex';
     document.getElementById('videoGrid').className = 'video-grid dual';
 
-    log('Cámara lista. Llamando al espectador...', 'ok');
+    log('Llamando al espectador...', 'ok');
     setStatus('llamando...', 'waiting');
 
-    // Try calling the viewer
     callViewer(viewerPeerId);
 
-    // Also listen in case viewer calls us (race condition)
+    // Also answer if viewer calls us (race condition)
     peer.on('call', (inCall) => {
-      log('Recibiendo llamada entrante...', 'ok');
+      log('Llamada entrante — respondiendo con stream...', 'ok');
       inCall.answer(localStream);
       setupCall(inCall);
     });
 
   } catch (e) {
-    log(`Error de cámara: ${e.message}`, 'err');
+    log(`Error cámara: ${e.message}`, 'err');
     setStatus('error cámara', 'error');
-    alert('No se pudo acceder a la cámara. Verifica los permisos.');
+    alert('No se pudo acceder a la cámara.\nVerifica permisos y que la página esté en HTTPS.');
   }
 }
 
 function callViewer(viewerPeerId) {
-  const outCall = peer.call(viewerPeerId, localStream);
+  if (!peer || peer.destroyed || !localStream) return;
+
+  clearTimeout(callRetryTimer);
+
+  const outCall = peer.call(viewerPeerId, localStream, {
+    // Request high-bitrate encoding
+    sdpTransform: (sdp) => {
+      // Increase video bitrate to 4Mbps
+      return sdp.replace(/b=AS:\d+/g, 'b=AS:4000')
+                .replace(/b=TIAS:\d+/g, 'b=TIAS:4000000');
+    }
+  });
+
+  if (!outCall) {
+    callRetryTimer = setTimeout(() => callViewer(viewerPeerId), 4000);
+    return;
+  }
+
   setupCall(outCall);
 
-  // Retry if no answer
-  const retry = setTimeout(() => {
-    log('Sin respuesta, reintentando...', 'warn');
+  // If no stream received in 10s, retry
+  const noAnswerTimer = setTimeout(() => {
+    log('Sin respuesta del espectador, reintentando...', 'warn');
     callViewer(viewerPeerId);
-  }, 8000);
+  }, 10000);
 
-  outCall.on('stream', () => clearTimeout(retry));
+  outCall.on('stream', () => clearTimeout(noAnswerTimer));
   outCall.on('error', () => {
-    clearTimeout(retry);
-    setTimeout(() => callViewer(viewerPeerId), 4000);
+    clearTimeout(noAnswerTimer);
+    callRetryTimer = setTimeout(() => callViewer(viewerPeerId), 4000);
+  });
+  outCall.on('close', () => {
+    clearTimeout(noAnswerTimer);
+    callRetryTimer = setTimeout(() => callViewer(viewerPeerId), 3000);
   });
 }
 
-// ─── VIEWER ROLE ──────────────────────────────────────────────────────────────
+// ─── VIEWER ROLE ─────────────────────────────────────────────────────────────
 function listenForCameraCall() {
+  // Remove old listeners to avoid duplicates
+  peer.off('call');
+
   peer.on('call', (inCall) => {
-    log('¡Cámara conectada! Respondiendo...', 'ok');
-    inCall.answer(); // no stream from viewer
+    log('Cámara conectada — respondiendo...', 'ok');
+    inCall.answer(); // viewer sends no stream
     setupCall(inCall);
   });
 }
 
-// ─── SETUP CALL ───────────────────────────────────────────────────────────────
+// ─── SETUP CALL ──────────────────────────────────────────────────────────────
 function setupCall(c) {
   call = c;
 
   call.on('stream', (remoteStream) => {
-    log('Stream recibido 🎉', 'ok');
+    log('Stream de video recibido ✓', 'ok');
     setStatus('conectado', 'connected');
 
     const vid = document.getElementById('remoteVideo');
+    // Set stream
+    vid.srcObject = null;
     vid.srcObject = remoteStream;
-    document.getElementById('remotePlaceholder').style.display = 'none';
-    document.getElementById('scanLine').style.display = 'block';
 
+    // Force play (some mobile browsers need this)
+    vid.play().catch(() => {});
+
+    document.getElementById('remotePlaceholder').style.display = 'none';
+    document.getElementById('freezeOverlay').classList.remove('show');
+    document.getElementById('scanLine').style.display = 'block';
+    document.getElementById('remoteLabel').textContent = '📷 en vivo';
+
+    // Show viewer transform controls
     if (role === 'viewer') {
-      document.getElementById('remoteLabel').textContent = '📷 cámara en vivo';
+      document.getElementById('viewerControls').classList.add('show');
+      initDragPan();
     }
+
+    // Start freeze detection
+    startFreezeDetection(vid, remoteStream);
+
+    // Apply any existing transform
+    applyTransform();
   });
 
   call.on('close', () => {
-    log('Llamada terminada', 'warn');
-    setStatus('desconectado', 'idle');
-    document.getElementById('remotePlaceholder').style.display = 'flex';
-    document.getElementById('scanLine').style.display = 'none';
-    document.getElementById('remoteVideo').srcObject = null;
-
-    // Auto-retry for viewer
-    if (role === 'viewer') {
-      log('Reintentando en 3s...', 'warn');
-      setTimeout(listenForCameraCall, 3000);
-    }
+    log('Llamada cerrada', 'warn');
+    stopFreezeDetection();
+    handleStreamLost();
   });
 
   call.on('error', (e) => {
     log(`Error en llamada: ${e}`, 'err');
+    stopFreezeDetection();
+    handleStreamLost();
   });
 }
+
+function handleStreamLost() {
+  setStatus('reconectando...', 'waiting');
+  document.getElementById('remotePlaceholder').style.display = 'flex';
+  document.getElementById('scanLine').style.display = 'none';
+  document.getElementById('freezeOverlay').classList.remove('show');
+
+  const vid = document.getElementById('remoteVideo');
+  vid.srcObject = null;
+
+  clearTimeout(retryTimer);
+  if (role === 'viewer') {
+    log('Esperando reconexión de la cámara...', 'warn');
+    retryTimer = setTimeout(listenForCameraCall, 2000);
+  }
+}
+
+// ─── FREEZE DETECTION ────────────────────────────────────────────────────────
+// Detects black screen / frozen frame and shows warning + auto-reconnects
+function startFreezeDetection(vid, stream) {
+  stopFreezeDetection();
+  lastVideoTime = -1;
+  let frozenCount = 0;
+
+  freezeCheckInterval = setInterval(() => {
+    if (!vid.srcObject) return;
+
+    // Check if video time is advancing
+    if (vid.readyState >= 2) {
+      if (vid.currentTime === lastVideoTime && lastVideoTime !== -1) {
+        frozenCount++;
+        if (frozenCount >= 4) { // ~4 seconds frozen
+          document.getElementById('freezeOverlay').classList.add('show');
+          log('Stream congelado — intentando reiniciar...', 'warn');
+          frozenCount = 0;
+
+          // Try to restart the track
+          if (stream) {
+            const vt = stream.getVideoTracks()[0];
+            if (vt) {
+              vt.enabled = false;
+              setTimeout(() => { vt.enabled = true; }, 500);
+            }
+          }
+
+          // Re-set srcObject to flush decoder
+          setTimeout(() => {
+            if (vid.srcObject) {
+              const s = vid.srcObject;
+              vid.srcObject = null;
+              vid.srcObject = s;
+              vid.play().catch(() => {});
+              document.getElementById('freezeOverlay').classList.remove('show');
+            }
+          }, 1500);
+        }
+      } else {
+        frozenCount = 0;
+        document.getElementById('freezeOverlay').classList.remove('show');
+      }
+      lastVideoTime = vid.currentTime;
+    }
+
+    // Check if video has gone black (currentTime stuck at 0 after stream started)
+    if (vid.currentTime === 0 && vid.srcObject && frozenCount > 6) {
+      log('Pantalla negra detectada — forzando reconexión', 'warn');
+      frozenCount = 0;
+      handleStreamLost();
+    }
+  }, 1000);
+}
+
+function stopFreezeDetection() {
+  if (freezeCheckInterval) { clearInterval(freezeCheckInterval); freezeCheckInterval = null; }
+}
+
+// ─── TRANSFORM (rotate + zoom + pan) ─────────────────────────────────────────
+function applyTransform() {
+  const vid = document.getElementById('remoteVideo');
+  const wrap = document.getElementById('remoteWrap');
+
+  // Aspect ratio adjustment when rotated sideways
+  if (rotation === 90 || rotation === 270) {
+    wrap.style.aspectRatio = '9/16';
+  } else {
+    wrap.style.aspectRatio = '16/9';
+  }
+
+  const flipScale = flipped ? -1 : 1;
+  vid.style.transform = `rotate(${rotation}deg) scaleX(${flipScale}) scale(${zoomLevel}) translate(${panX}px, ${panY}px)`;
+  vid.style.transformOrigin = 'center center';
+
+  document.getElementById('zoomDisplay').textContent = zoomLevel.toFixed(2).replace('.00','') + '×';
+}
+
+function rotateLeft()  { rotation = (rotation - 90 + 360) % 360; panX = 0; panY = 0; applyTransform(); log(`Rotado: ${rotation}°`); }
+function rotateRight() { rotation = (rotation + 90) % 360; panX = 0; panY = 0; applyTransform(); log(`Rotado: ${rotation}°`); }
+
+function flipVideo() {
+  flipped = !flipped;
+  document.getElementById('btnFlip').classList.toggle('active', flipped);
+  applyTransform();
+  log(flipped ? 'Imagen invertida' : 'Imagen normal');
+}
+
+function changeZoom(delta) {
+  zoomLevel = Math.max(0.5, Math.min(4.0, zoomLevel + delta));
+  if (zoomLevel <= 1.0) { panX = 0; panY = 0; }
+  applyTransform();
+}
+
+function resetTransform() {
+  rotation = 0; zoomLevel = 1.0; flipped = false; panX = 0; panY = 0;
+  document.getElementById('btnFlip').classList.remove('active');
+  applyTransform();
+  log('Transformación reiniciada');
+}
+
+// Drag to pan when zoomed
+function initDragPan() {
+  const wrap = document.getElementById('remoteWrap');
+
+  wrap.addEventListener('mousedown', startDrag);
+  wrap.addEventListener('touchstart', startDrag, { passive: true });
+  document.addEventListener('mousemove', doDrag);
+  document.addEventListener('touchmove', doDrag, { passive: true });
+  document.addEventListener('mouseup', endDrag);
+  document.addEventListener('touchend', endDrag);
+
+  // Pinch-to-zoom on mobile
+  let lastDist = 0;
+  wrap.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 2) lastDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+  }, { passive: true });
+
+  wrap.addEventListener('touchmove', (e) => {
+    if (e.touches.length === 2) {
+      const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+      const delta = (dist - lastDist) * 0.01;
+      lastDist = dist;
+      zoomLevel = Math.max(0.5, Math.min(4.0, zoomLevel + delta));
+      applyTransform();
+    }
+  }, { passive: true });
+}
+
+function startDrag(e) {
+  if (zoomLevel <= 1.0) return;
+  isDragging = true;
+  const pt = e.touches ? e.touches[0] : e;
+  dragStartX = pt.clientX; dragStartY = pt.clientY;
+  panStartX = panX; panStartY = panY;
+}
+
+function doDrag(e) {
+  if (!isDragging) return;
+  const pt = e.touches ? e.touches[0] : e;
+  panX = panStartX + (pt.clientX - dragStartX);
+  panY = panStartY + (pt.clientY - dragStartY);
+  applyTransform();
+}
+
+function endDrag() { isDragging = false; }
 
 // ─── UI ───────────────────────────────────────────────────────────────────────
 function showVideoArea() {
   document.getElementById('setupCard').style.display = 'none';
   const va = document.getElementById('videoArea');
   va.classList.add('visible', 'fade-in');
-
-  if (role === 'viewer') {
-    document.getElementById('remoteLabel').textContent = '📡 esperando cámara...';
-  }
 }
 
 function disconnect() {
+  stopFreezeDetection();
+  clearTimeout(retryTimer);
+  clearTimeout(callRetryTimer);
+
   if (localStream) localStream.getTracks().forEach(t => t.stop());
-  if (call) call.close();
-  if (peer) peer.destroy();
+  if (call) { try { call.close(); } catch(e) {} }
+  if (peer) { try { peer.destroy(); } catch(e) {} }
+
   localStream = null; peer = null; call = null;
 
   document.getElementById('videoArea').classList.remove('visible');
@@ -785,8 +1078,16 @@ function disconnect() {
   document.getElementById('localVideo').srcObject = null;
   document.getElementById('remotePlaceholder').style.display = 'flex';
   document.getElementById('scanLine').style.display = 'none';
+  document.getElementById('freezeOverlay').classList.remove('show');
   document.getElementById('muteBtn').style.display = 'none';
   document.getElementById('camSwitchBtn').style.display = 'none';
+  document.getElementById('viewerControls').classList.remove('show');
+  document.getElementById('remoteWrap').style.aspectRatio = '16/9';
+
+  // Reset transform
+  rotation = 0; zoomLevel = 1.0; flipped = false; panX = 0; panY = 0;
+  document.getElementById('remoteVideo').style.transform = '';
+
   setStatus('esperando', 'idle');
   log('Desconectado.');
 }
@@ -806,37 +1107,44 @@ async function switchCamera() {
   facingMode = facingMode === 'environment' ? 'user' : 'environment';
   log(`Cambiando a cámara ${facingMode === 'environment' ? 'trasera' : 'frontal'}...`);
 
-  const newStream = await navigator.mediaDevices.getUserMedia({
-    video: { facingMode, width: { ideal: 1280 }, height: { ideal: 720 } },
-    audio: true
-  }).catch(() => null);
+  try {
+    const newStream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode,
+        width:  { ideal: 3840, min: 640 },
+        height: { ideal: 2160, min: 480 },
+        frameRate: { ideal: 30 }
+      },
+      audio: { echoCancellation: true, noiseSuppression: true }
+    });
 
-  if (!newStream) { log('No se pudo cambiar de cámara', 'err'); return; }
+    localStream.getTracks().forEach(t => t.stop());
+    localStream = newStream;
+    document.getElementById('localVideo').srcObject = localStream;
 
-  localStream.getTracks().forEach(t => t.stop());
-  localStream = newStream;
+    if (call && call.peerConnection) {
+      const sender = call.peerConnection.getSenders().find(s => s.track && s.track.kind === 'video');
+      if (sender) await sender.replaceTrack(localStream.getVideoTracks()[0]);
+    }
 
-  document.getElementById('localVideo').srcObject = localStream;
-
-  // Replace track in active call
-  if (call && call.peerConnection) {
-    const sender = call.peerConnection.getSenders().find(s => s.track && s.track.kind === 'video');
-    if (sender) sender.replaceTrack(localStream.getVideoTracks()[0]);
+    const settings = localStream.getVideoTracks()[0].getSettings();
+    log(`Cámara cambiada: ${settings.width}×${settings.height}`, 'ok');
+  } catch (e) {
+    log(`No se pudo cambiar de cámara: ${e.message}`, 'err');
   }
-  log('Cámara cambiada', 'ok');
 }
 
 function toggleFS(videoId) {
   const v = document.getElementById(videoId);
   if (!document.fullscreenElement) {
-    v.requestFullscreen().catch(() => {});
+    (v.requestFullscreen || v.webkitRequestFullscreen || v.mozRequestFullScreen).call(v).catch(() => {});
   } else {
-    document.exitFullscreen();
+    document.exitFullscreen().catch(() => {});
   }
 }
 
-// Init
-log('CamLink listo. Selecciona tu rol y una sala para comenzar.');
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+log('CamLink listo. Selecciona tu rol y un código de sala.');
 </script>
 </body>
 </html>
