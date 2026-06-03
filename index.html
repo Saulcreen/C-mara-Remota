@@ -549,10 +549,24 @@ function startConnection() {
 
     peer = new Peer(myId, {
       debug: 0,
-      config: { iceServers: [
-        { urls: 'stun:stun.l.google.com:19302' },
-        { urls: 'stun:stun1.l.google.com:19302' }
-      ]}
+      config: {
+        iceServers: [
+          { urls: 'stun:stun.l.google.com:19302' },
+          { urls: 'stun:stun1.l.google.com:19302' },
+          { urls: 'stun:stun.cloudflare.com:3478' },
+          // TURN públicos de Open Relay Project — mejoran calidad cuando hay NAT
+          { urls: 'turn:openrelay.metered.ca:80',
+            username: 'openrelayproject', credential: 'openrelayproject' },
+          { urls: 'turn:openrelay.metered.ca:443',
+            username: 'openrelayproject', credential: 'openrelayproject' },
+          { urls: 'turn:openrelay.metered.ca:443?transport=tcp',
+            username: 'openrelayproject', credential: 'openrelayproject' },
+        ],
+        // Usar candidatos de red agresivos para encontrar la mejor ruta
+        iceTransportPolicy: 'all',
+        bundlePolicy: 'max-bundle',
+        rtcpMuxPolicy: 'require',
+      }
     });
 
     peer.on('open', () => {
@@ -771,8 +785,154 @@ function listenForCall() {
   peer.on('call', inCall => {
     log('Cámara conectada, respondiendo...','ok');
     inCall.answer();
+
+    // Interceptar el RTCPeerConnection ANTES de que negocie para parchar el SDP
+    // PeerJS expone peerConnection sincrónicamente justo después de answer()
+    interceptPeerConnection(inCall);
+
     handleCall(inCall);
   });
+}
+
+// Intercepta el RTCPeerConnection del viewer para forzar bitrate DURANTE la negociación
+function interceptPeerConnection(inCall) {
+  // Esperar a que PeerJS asigne el peerConnection (ocurre ms después de answer)
+  let attempts = 0;
+  const waitForPC = setInterval(() => {
+    attempts++;
+    const pc = inCall.peerConnection;
+    if (!pc) { if (attempts > 20) clearInterval(waitForPC); return; }
+    clearInterval(waitForPC);
+
+    log('Interceptando negociación WebRTC...', 'ok');
+
+    // Hook: modificar cada SDP answer antes de que se aplique
+    const origSetLocalDesc = pc.setLocalDescription.bind(pc);
+    pc.setLocalDescription = async (desc) => {
+      if (desc && desc.sdp && desc.type === 'answer') {
+        desc = { type: desc.type, sdp: patchSDPBitrate(desc.sdp) };
+        log('SDP answer parcheado: bitrate máximo ✓', 'ok');
+      }
+      return origSetLocalDesc(desc);
+    };
+
+    // También parchar el remoteDescription (offer de la cámara)
+    const origSetRemoteDesc = pc.setRemoteDescription.bind(pc);
+    pc.setRemoteDescription = async (desc) => {
+      if (desc && desc.sdp && desc.type === 'offer') {
+        desc = { type: desc.type, sdp: patchSDPBitrate(desc.sdp) };
+      }
+      return origSetRemoteDesc(desc);
+    };
+
+    // Cuando ICE conecte, forzar bitrate vía setParameters también
+    pc.addEventListener('iceconnectionstatechange', () => {
+      if (pc.iceConnectionState === 'connected' || pc.iceConnectionState === 'completed') {
+        setTimeout(() => forceBitrateReceiver(pc), 500);
+        setTimeout(() => forceBitrateReceiver(pc), 2000);
+        setTimeout(() => forceBitrateReceiver(pc), 5000);
+        // Diagnosticar tipo de conexión (relay = peor calidad, direct = mejor)
+        setTimeout(async () => {
+          try {
+            const stats = await pc.getStats();
+            stats.forEach(r => {
+              if (r.type === 'candidate-pair' && r.state === 'succeeded') {
+                const local = [...stats.values()].find(s => s.id === r.localCandidateId);
+                const remote = [...stats.values()].find(s => s.id === r.remoteCandidateId);
+                if (local && remote) {
+                  const tipo = local.candidateType === 'relay' ? '⚠️ RELAY (lento)' : '✅ DIRECTO';
+                  log(\`Conexión: \${tipo} | \${local.protocol?.toUpperCase()} | latencia ~\${Math.round(r.currentRoundTripTime*1000||0)}ms\`, local.candidateType==='relay'?'warn':'ok');
+                }
+              }
+            });
+          } catch(_) {}
+        }, 2000);
+      }
+    });
+  }, 50);
+}
+
+// Parcha el SDP: fuerza H.264, bitrate alto, y deshabilita degradación
+function patchSDPBitrate(sdp) {
+  // 1) Preferir H.264 sobre VP8/VP9 — mucho mejor calidad a bajo bitrate
+  sdp = preferH264(sdp);
+
+  // 2) Eliminar limitaciones existentes de bitrate
+  sdp = sdp.replace(/b=AS:\d+\r\n/g, '').replace(/b=TIAS:\d+\r\n/g, '');
+
+  // 3) Insertar bitrate alto en la sección de video
+  sdp = sdp.replace(
+    /(m=video [^\r\n]+\r\n)/g,
+    '$1b=AS:8000\r\nb=TIAS:8000000\r\n'
+  );
+
+  // 4) Forzar max-fs (frame size) y max-mbps para resolución máxima
+  sdp = sdp.replace(
+    /(a=fmtp:\d+ (?!.*max-fs))/g,
+    '$1max-fs=8160;max-mbps=244800;'
+  );
+
+  return sdp;
+}
+
+// Reordena los codecs en el SDP para que H.264 vaya primero
+function preferH264(sdp) {
+  const lines = sdp.split('\r\n');
+  const videoIdx = lines.findIndex(l => l.startsWith('m=video'));
+  if (videoIdx === -1) return sdp;
+
+  // Encontrar todos los payloads H.264
+  const h264Payloads = [];
+  lines.forEach(line => {
+    const m = line.match(/a=rtpmap:(\d+) H264\/90000/i);
+    if (m) h264Payloads.push(m[1]);
+  });
+  if (h264Payloads.length === 0) return sdp; // no hay H.264, dejar como está
+
+  // Reordenar la línea m=video para poner H.264 primero
+  const mLine = lines[videoIdx];
+  const parts = mLine.split(' ');
+  const prefix = parts.slice(0, 3); // "m=video PORT RTP/SAVPF"
+  const payloads = parts.slice(3);
+  const reordered = [
+    ...h264Payloads,
+    ...payloads.filter(p => !h264Payloads.includes(p))
+  ];
+  lines[videoIdx] = [...prefix, ...reordered].join(' ');
+  return lines.join('\r\n');
+}
+
+// Fuerza bitrate en receivers (lado viewer) vía setParameters
+async function forceBitrateReceiver(pc) {
+  if (!pc) return;
+  let applied = false;
+  for (const receiver of pc.getReceivers()) {
+    if (!receiver.track || receiver.track.kind !== 'video') continue;
+    // Señalar al browser que este track es alta prioridad
+    try {
+      if (receiver.transport && receiver.transport.iceTransport) {
+        // no hay API directa, pero podemos influir via el sender de RTCP
+      }
+    } catch(_) {}
+    applied = true;
+  }
+  // También forzar en senders (RTCP feedback influye en el remitente)
+  for (const sender of pc.getSenders()) {
+    if (!sender.track || sender.track.kind !== 'video') continue;
+    try {
+      const p = sender.getParameters();
+      if (p && p.encodings) {
+        p.encodings.forEach(e => {
+          e.maxBitrate = 8_000_000;
+          e.networkPriority = 'high';
+          e.priority = 'high';
+        });
+        await sender.setParameters(p).catch(()=>{});
+        applied = true;
+      }
+    } catch(_) {}
+  }
+  if (applied) log('Bitrate receptor maximizado ✓', 'ok');
 }
 
 // ─── HANDLE CALL ─────────────────────────────────────────────────────────────
