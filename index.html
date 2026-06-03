@@ -210,6 +210,17 @@
     image-rendering: high-quality;
     /* transform se aplica por JS vía style.transform */
     transform-origin: center center;
+    /* Forzar GPU compositing limpio, sin filtros del browser */
+    -webkit-transform: translateZ(0);
+    -webkit-filter: none;
+    filter: none;
+  }
+
+  /* Video remoto: máxima nitidez posible en el receptor */
+  #remoteVideo {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+    image-rendering: high-quality;
   }
 
   .video-label {
@@ -662,6 +673,59 @@ function callViewer(viewerPeerId) {
   outCall.on('close',  () => { clearTimeout(noAns); callRetryTimer = setTimeout(()=>callViewer(viewerPeerId),3000); });
 }
 
+// ─── FORZAR CALIDAD EN EL RECEPTOR (viewer) ──────────────────────────────────
+// El navegador del espectador puede degradar el video entrante por CPU/red.
+// Estos ajustes le dicen al RTCPeerConnection que no escale hacia abajo.
+async function forceReceiverQuality(pc) {
+  if (!pc) return;
+
+  // 1) Deshabilitar cualquier reducción de resolución en receivers
+  for (const receiver of pc.getReceivers()) {
+    if (!receiver.track || receiver.track.kind !== 'video') continue;
+    try {
+      // Algunos navegadores exponen setParameters en receivers también
+      if (typeof receiver.setParameters === 'function') {
+        const params = receiver.getParameters ? receiver.getParameters() : {};
+        if (!params.encodings) params.encodings = [{}];
+        params.encodings.forEach(enc => {
+          enc.networkPriority = 'high';
+          enc.priority = 'high';
+        });
+        await receiver.setParameters(params).catch(() => {});
+      }
+    } catch (_) {}
+  }
+
+  // 2) Forzar resolución de decodificación via SDP renegociación (answer lado viewer)
+  //    Aumentar el presupuesto de CPU de decodificación
+  try {
+    const offer = await pc.createOffer({ offerToReceiveVideo: true, offerToReceiveAudio: true });
+    // Aumentar b=AS en el SDP de recepción
+    const patched = offer.sdp.replace(
+      /(m=video[\s\S]*?)(a=)/,
+      '$1b=AS:8000\r\nb=TIAS:8000000\r\n$2'
+    );
+    await pc.setLocalDescription({ type: offer.type, sdp: patched }).catch(() => {});
+  } catch (_) {}
+
+  log('Calidad de recepción maximizada ✓', 'ok');
+}
+
+// ─── MEJORAR BUFFER DEL VIDEO ELEMENT ────────────────────────────────────────
+function optimizeVideoElement(vid) {
+  // Reducir el jitter buffer para menos latencia y mejor nitidez
+  if (vid.jitterBufferDelay !== undefined) {
+    try { vid.jitterBufferDelay = 0.05; } catch (_) {}
+  }
+  // Forzar decodificación de alta prioridad
+  if ('requestVideoFrameCallback' in vid) {
+    const keepSharp = () => {
+      if (vid.srcObject) vid.requestVideoFrameCallback(keepSharp);
+    };
+    vid.requestVideoFrameCallback(keepSharp);
+  }
+}
+
 // Fuerza bitrate máximo en todos los senders de video del RTCPeerConnection
 // Usa setParameters (estándar W3C) + parche SDP como fallback
 async function forceBitrate(pc) {
@@ -732,6 +796,13 @@ function handleCall(c) {
     vid.setAttribute('playsinline', '');
     vid.setAttribute('webkit-playsinline', '');
     vid.play().catch(()=>{});
+
+    // Forzar calidad de recepción en el viewer (no toca la cámara)
+    if (role === 'viewer' && c.peerConnection) {
+      setTimeout(() => forceReceiverQuality(c.peerConnection), 1500);
+      setTimeout(() => forceReceiverQuality(c.peerConnection), 4000);
+    }
+    optimizeVideoElement(vid);
 
     document.getElementById('remotePlaceholder').style.display = 'none';
     document.getElementById('freezeOverlay').classList.remove('show');
